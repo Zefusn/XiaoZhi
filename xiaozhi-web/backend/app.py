@@ -625,6 +625,8 @@ def label_process():
             # 低量标签：仅展示标签数小于10，大于等于5的标签名称，但需要展示数量
             filtered_counts = {k: v for k, v in question_counts.items() if 5 <= v < 10}
             results = [{'label': label, 'count': count} for label, count in filtered_counts.items()]
+            # 按数量逆序排序
+            results.sort(key=lambda x: x['count'], reverse=True)
         else:  # 默认分析
             # 默认分析：标签数低于10的统称为其他，数量为低于10的标签数量之和
             other_count = 0
