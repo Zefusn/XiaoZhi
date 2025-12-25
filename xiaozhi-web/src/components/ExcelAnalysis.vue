@@ -7,12 +7,13 @@
           :auto-upload="false"
           :limit="1"
           :on-change="handleFileChange"
+          :on-remove="handleFileRemove"
           accept=".xlsx,.xls,.xlsm,.xltx,.xltm"
         >
           <el-button type="primary" :icon="Upload">选择文件</el-button>
           <template #tip>
             <div class="el-upload__tip">
-              {{ fileName || '仅支持 .xlsx, .xls, .xlsm, .xltx, .xltm 文件' }}
+              {{ sharedFileName.value || '仅支持 .xlsx, .xls, .xlsm, .xltx, .xltm 文件' }}
             </div>
           </template>
         </el-upload>
@@ -24,12 +25,13 @@
           :auto-upload="false"
           :limit="1"
           :on-change="handleFilterFileChange"
+          :on-remove="handleFilterFileRemove"
           accept=".xlsx,.xls,.xlsm,.xltx,.xltm"
         >
           <el-button type="primary" :icon="Upload">选择过滤文件</el-button>
           <template #tip>
             <div class="el-upload__tip">
-              {{ filterFileName || '选择包含需要去除的 userContent 的 Excel 文件' }}
+              {{ sharedFilterFileName.value || '选择包含需要去除的 userContent 的 Excel 文件' }}
             </div>
           </template>
         </el-upload>
@@ -104,6 +106,7 @@ import { ref, reactive } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Upload } from '@element-plus/icons-vue'
 import api from '@/utils/request'
+import { selectedFile as sharedSelectedFile, filterFile as sharedFilterFile, fileName as sharedFileName, filterFileName as sharedFilterFileName, updateSelectedFile, updateFileName, updateFilterFile, updateFilterFileName } from '@/store/fileStore'
 
 const form = reactive({
   deviceIds: 'ac44a75398c981f7,d05eae7f04ed5d52,a60a2ff1d9c3ccfb,0276ecb7a675de03,368b4f5495a5e564,f7f42dc48701c3b6,f7f42dc48701c3b6,6b148ea3088089ec,d1579a130a93aab9,e80d34b2ee6fc588,8ff0f2727c76ee81,cb00707bd8231384,22ccbb1f4183522b,22ccbb1f4183522b,f71400c874c7ae03,b053fed6f322070d,77ffb26dd8aec8d7,b19393e3fb39fed1,aa165cc58b7b69e1,066a1f89fe9e631a,766b3ef3f8f35119,c8cbd47c78e3adba,9fe81ff00522beff',
@@ -114,23 +117,48 @@ const form = reactive({
 const uploadRef = ref()
 const filterUploadRef = ref()
 const tableRef = ref()
-const fileName = ref('')
-const filterFileName = ref('')
-const selectedFile = ref(null)
-const filterFile = ref(null)
+// 使用共享的文件状态
+const selectedFile = sharedSelectedFile
+const filterFile = sharedFilterFile
 const loading = ref(false)
 const results = ref([])
 const selectedRows = ref([])
 
 const handleFileChange = (file) => {
-  selectedFile.value = file.raw
-  fileName.value = file.name
+  // 清除之前的文件列表
+  if (uploadRef.value) {
+    uploadRef.value.clearFiles()
+  }
+  updateSelectedFile(file.raw)
+  updateFileName(file.name)
+}
+
+const handleFileRemove = () => {
+  updateSelectedFile(null)
+  updateFileName('')
+  // 清除上传组件的文件列表
+  if (uploadRef.value) {
+    uploadRef.value.clearFiles()
+  }
 }
 
 const handleFilterFileChange = (file) => {
   if (file) {
-    filterFile.value = file.raw
-    filterFileName.value = file.name
+    // 清除之前的文件列表
+    if (filterUploadRef.value) {
+      filterUploadRef.value.clearFiles()
+    }
+    updateFilterFile(file.raw)
+    updateFilterFileName(file.name)
+  }
+}
+
+const handleFilterFileRemove = () => {
+  updateFilterFile(null)
+  updateFilterFileName('')
+  // 清除上传组件的文件列表
+  if (filterUploadRef.value) {
+    filterUploadRef.value.clearFiles()
   }
 }
 
@@ -139,16 +167,16 @@ const setDefaultDeviceIds = () => {
 }
 
 const analyzeData = async () => {
-  if (!selectedFile.value) {
+  if (!sharedSelectedFile.value) {
     ElMessage.warning('请先选择Excel文件')
     return
   }
 
   loading.value = true
   const formData = new FormData()
-  formData.append('file', selectedFile.value)
-  if (filterFile.value) {
-    formData.append('filterFile', filterFile.value)
+  formData.append('file', sharedSelectedFile.value)
+  if (sharedFilterFile.value) {
+    formData.append('filterFile', sharedFilterFile.value)
   }
   formData.append('deviceIds', form.deviceIds)
   formData.append('dataTypes', JSON.stringify(form.dataTypes))
