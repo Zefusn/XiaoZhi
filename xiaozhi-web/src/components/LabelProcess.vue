@@ -288,23 +288,72 @@ const copySelection = () => {
 
 <style scoped>
 .label-process {
-  padding: 20px;
+  padding: 8px;
 }
 
 .result-section {
-  margin-top: 20px;
+  margin-top: 24px;
+  padding: 20px;
+  background: #fafbfc;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
 }
 
 .result-section h3 {
-  margin-bottom: 15px;
-  color: #303133;
+  margin-bottom: 16px;
+  color: #1f2937;
+  font-size: 16px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.result-section h3::before {
+  content: '';
+  width: 4px;
+  height: 18px;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  border-radius: 2px;
 }
 
 .mb-10 {
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 
 .mt-10 {
-  margin-top: 10px;
+  margin-top: 12px;
+}
+
+:deep(.el-form-item__label) {
+  font-weight: 500;
+  color: #374151;
+}
+
+:deep(.el-upload-list__item) {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: #f9fafb;
+}
+
+:deep(.el-upload-list__item-name) {
+  color: #6366f1;
+  font-weight: 500;
+}
+
+:deep(.el-checkbox__label),
+:deep(.el-radio__label) {
+  font-weight: 400;
+}
+
+:deep(.el-button--success) {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border: none;
+}
+
+:deep(.el-button--success:hover) {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
 }
 </style>
