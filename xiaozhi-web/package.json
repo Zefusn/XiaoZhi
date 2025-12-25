@@ -1,7 +1,7 @@
 {
   "name": "xiaozhi-web",
   "version": "1.0.0",
-  "description": "小志标签处理 Web 应用",
+  "description": "小志数据 Web 应用",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

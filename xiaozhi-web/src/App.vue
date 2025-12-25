@@ -5,7 +5,7 @@
         <div class="header-content">
           <div class="logo-section">
             <span class="logo-icon">📊</span>
-            <h1>小志标签处理</h1>
+            <h1>小志数据</h1>
           </div>
           <div class="header-subtitle">数据分析工具</div>
         </div>

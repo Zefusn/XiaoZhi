@@ -1,23 +1,23 @@
 <template>
   <div class="home-container">
     <el-tabs v-model="activeTab" type="border-card" class="main-tabs">
-      <!-- 第一页：Excel 数据分析 -->
+      <!-- 第一页：小志总数据 -->
       <el-tab-pane name="analysis">
         <template #label>
           <span class="tab-label">
             <span class="tab-icon">📊</span>
-            Excel 数据分析
+            小志总数据
           </span>
         </template>
         <ExcelAnalysis />
       </el-tab-pane>
 
-      <!-- 第二页：小志标签处理 -->
+      <!-- 第二页：小志标签数据 -->
       <el-tab-pane name="label">
         <template #label>
           <span class="tab-label">
             <span class="tab-icon">🏷️</span>
-            小志标签处理
+            小志标签数据
           </span>
         </template>
         <LabelProcess />

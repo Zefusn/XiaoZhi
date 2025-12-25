@@ -4,7 +4,7 @@
       v-if="!hasData"
       title="请先加载数据"
       type="warning"
-      description="请先在「Excel 数据分析」或「小志标签处理」页面点击查询/生成按钮加载数据，然后再返回此页面执行 SQL 查询"
+      description="请先在「小志总数据」或「小志标签数据」页面点击查询/生成按钮加载数据，然后再返回此页面执行 SQL 查询"
       :closable="false"
       class="mb-20"
       show-icon
@@ -120,7 +120,7 @@ const executeQuery = async () => {
   // 先检查数据状态
   await checkDataStatus()
   if (!hasData.value) {
-    ElMessage.warning('没有可用的数据，请先在「Excel 数据分析」或「小志标签处理」页面加载数据')
+    ElMessage.warning('没有可用的数据，请先在「小志总数据」或「小志标签数据」页面加载数据')
     return
   }
 

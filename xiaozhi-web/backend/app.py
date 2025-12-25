@@ -332,7 +332,7 @@ def read_excel_with_python_libs_for_filter(filepath):
 
 @app.route('/api/analyze', methods=['POST'])
 def analyze_data():
-    """Excel 数据分析接口"""
+    """小志总数据接口"""
     try:
         # 清理旧文件
         cleanup_old_files()
@@ -541,7 +541,7 @@ def analyze_data():
 
 @app.route('/api/label-process', methods=['POST'])
 def label_process():
-    """小志标签处理接口"""
+    """小志标签数据接口"""
     try:
         # 清理旧文件
         cleanup_old_files()
@@ -723,7 +723,7 @@ def sql_query():
             return jsonify({'error': 'SQL 查询语句不能为空'}), 400
         
         if not data_store['conn']:
-            return jsonify({'error': '没有可用的数据，请先在「Excel 数据分析」或「小志标签处理」页面点击查询/生成按钮加载数据'}), 400
+            return jsonify({'error': '没有可用的数据，请先在「小志总数据」或「小志标签数据」页面点击查询/生成按钮加载数据'}), 400
         
         # 执行 SQL 查询
         cursor = data_store['conn'].cursor()
