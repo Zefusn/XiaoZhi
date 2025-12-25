@@ -7,14 +7,21 @@ pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 
 【方案二：使用 conda（推荐）】
 如果您安装了 Anaconda 或 Miniconda：
-conda install openpyxl flask flask-cors
+conda install openpyxl flask flask-cors xlrd
 
 【方案三：分步安装】
 pip install --upgrade pip
 pip install Flask==2.3.3
 pip install flask-cors==4.0.0
 pip install openpyxl==3.1.2
+pip install xlrd==2.0.1
 pip install Werkzeug==2.3.7
+
+【关于文件格式支持】
+如果遇到"不支持的文件格式"错误，请检查：
+1. 文件确实是 Excel 格式（.xlsx, .xls, .xlsm, .xltx, .xltm）
+2. 文件未损坏，可以正常在 Excel 中打开
+3. 系统会根据文件扩展名自动选择适当的处理库
 
 【检查 Python 版本】
 运行命令查看您的 Python 版本：
@@ -26,5 +33,6 @@ python --version
 安装完成后，运行以下命令验证：
 python -c "import flask; print(flask.__version__)"
 python -c "import openpyxl; print(openpyxl.__version__)"
+python -c "import xlrd; print(xlrd.__version__)"
 
 =========================================

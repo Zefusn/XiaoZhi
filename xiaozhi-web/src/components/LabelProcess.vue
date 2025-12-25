@@ -7,12 +7,29 @@
           :auto-upload="false"
           :limit="1"
           :on-change="handleFileChange"
-          accept=".xlsx,.xls"
+          accept=".xlsx,.xls,.xlsm,.xltx,.xltm"
         >
           <el-button type="primary" :icon="Upload">选择文件</el-button>
           <template #tip>
             <div class="el-upload__tip">
-              {{ fileName || '仅支持 .xlsx 和 .xls 文件' }}
+              {{ fileName || '仅支持 .xlsx, .xls, .xlsm, .xltx, .xltm 文件' }}
+            </div>
+          </template>
+        </el-upload>
+      </el-form-item>
+
+      <el-form-item label="导入需去除的数据">
+        <el-upload
+          ref="filterUploadRef"
+          :auto-upload="false"
+          :limit="1"
+          :on-change="handleFilterFileChange"
+          accept=".xlsx,.xls,.xlsm,.xltx,.xltm"
+        >
+          <el-button type="primary" :icon="Upload">选择过滤文件</el-button>
+          <template #tip>
+            <div class="el-upload__tip">
+              {{ filterFileName || '选择包含需要去除的 userContent 的 Excel 文件' }}
             </div>
           </template>
         </el-upload>
@@ -21,9 +38,12 @@
       <el-form-item label="需要去除的设备ID">
         <el-input
           v-model="form.deviceIds"
-          placeholder="多个设备ID用逗号分隔，例如：device1,device2"
+          placeholder="多个设备ID用逗号分隔"
           clearable
         />
+        <el-button @click="setDefaultDeviceIds" size="small" style="margin-top: 5px;">
+          设置默认设备ID
+        </el-button>
       </el-form-item>
 
       <el-form-item label="选择平台">
@@ -64,8 +84,13 @@
         max-height="500"
       >
         <el-table-column type="selection" width="55" />
-        <el-table-column prop="label" label="标签名称" min-width="200" />
-        <el-table-column prop="count" label="数量" width="120" />
+        <el-table-column prop="label" :label="getLabelColumnTitle" min-width="200" />
+        <el-table-column 
+          v-if="showCountColumn" 
+          prop="count" 
+          label="数量" 
+          width="120" 
+        />
       </el-table>
       <el-button
         type="success"
@@ -81,28 +106,56 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Upload } from '@element-plus/icons-vue'
 import api from '@/utils/request'
 
 const form = reactive({
-  deviceIds: '',
+  deviceIds: 'ac44a75398c981f7,d05eae7f04ed5d52,a60a2ff1d9c3ccfb,0276ecb7a675de03,368b4f5495a5e564,f7f42dc48701c3b6,f7f42dc48701c3b6,6b148ea3088089ec,d1579a130a93aab9,e80d34b2ee6fc588,8ff0f2727c76ee81,cb00707bd8231384,22ccbb1f4183522b,22ccbb1f4183522b,f71400c874c7ae03,b053fed6f322070d,77ffb26dd8aec8d7,b19393e3fb39fed1,aa165cc58b7b69e1,066a1f89fe9e631a,766b3ef3f8f35119,c8cbd47c78e3adba,9fe81ff00522beff',
   platform: '安卓',
   analysisType: 'default'
 })
 
 const uploadRef = ref()
+const filterUploadRef = ref()
 const tableRef = ref()
 const fileName = ref('')
+const filterFileName = ref('')
 const selectedFile = ref(null)
+const filterFile = ref(null)
 const loading = ref(false)
 const results = ref([])
 const selectedRows = ref([])
 
+// 计算属性：根据分析类型决定是否显示数量列
+const showCountColumn = computed(() => {
+  return form.analysisType !== 'function'
+})
+
+// 计算属性：根据分析类型决定列标题
+const getLabelColumnTitle = computed(() => {
+  if (form.analysisType === 'function') {
+    return '内容'
+  } else {
+    return '标签名称'
+  }
+})
+
 const handleFileChange = (file) => {
   selectedFile.value = file.raw
   fileName.value = file.name
+}
+
+const handleFilterFileChange = (file) => {
+  if (file) {
+    filterFile.value = file.raw
+    filterFileName.value = file.name
+  }
+}
+
+const setDefaultDeviceIds = () => {
+  form.deviceIds = 'ac44a75398c981f7,d05eae7f04ed5d52,a60a2ff1d9c3ccfb,0276ecb7a675de03,368b4f5495a5e564,f7f42dc48701c3b6,f7f42dc48701c3b6,6b148ea3088089ec,d1579a130a93aab9,e80d34b2ee6fc588,8ff0f2727c76ee81,cb00707bd8231384,22ccbb1f4183522b,22ccbb1f4183522b,f71400c874c7ae03,b053fed6f322070d,77ffb26dd8aec8d7,b19393e3fb39fed1,aa165cc58b7b69e1,066a1f89fe9e631a,766b3ef3f8f35119,c8cbd47c78e3adba,9fe81ff00522beff'
 }
 
 const generateResults = async () => {
@@ -111,14 +164,12 @@ const generateResults = async () => {
     return
   }
 
-  if (!form.deviceIds) {
-    ElMessage.warning('请输入需要去除的设备ID')
-    return
-  }
-
   loading.value = true
   const formData = new FormData()
   formData.append('file', selectedFile.value)
+  if (filterFile.value) {
+    formData.append('filterFile', filterFile.value)
+  }
   formData.append('deviceIds', form.deviceIds)
   formData.append('platform', form.platform)
   formData.append('analysisType', form.analysisType)
@@ -152,9 +203,18 @@ const copySelection = () => {
     return
   }
   
-  const text = selectedRows.value
-    .map(row => `${row.label}\t${row.count}`)
-    .join('\n')
+  let text
+  if (showCountColumn.value) {
+    // 包含数量列
+    text = selectedRows.value
+      .map(row => `${row.label}\t${row.count}`)
+      .join('\n')
+  } else {
+    // 不包含数量列，只复制标签名称（或内容）
+    text = selectedRows.value
+      .map(row => row.label)
+      .join('\n')
+  }
   
   navigator.clipboard.writeText(text).then(() => {
     ElMessage.success('已复制到剪贴板')

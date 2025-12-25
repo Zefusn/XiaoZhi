@@ -9,9 +9,9 @@ cd backend
 pip show flask >nul 2>&1
 if %errorlevel% neq 0 (
     echo 正在安装后端依赖...
-    echo 提示: 如果 pandas 安装失败，请运行 install_windows.bat 脚本
+    echo 提示: 如果安装失败，请运行 install_windows_with_magic.bat 脚本
     echo 或使用预编译的 wheel 文件安装
-    call install_windows.bat
+    call install_windows_with_magic.bat
 ) else (
     echo 后端依赖已安装
 )
