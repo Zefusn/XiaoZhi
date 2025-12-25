@@ -423,6 +423,7 @@ def analyze_data():
         initial_directives_count = 0
         initial_helpful_count = 0
         initial_unhelpful_count = 0
+        initial_image_no_text_count = 0  # 有图片无文字数量
         
         for row in initial_data:
             if 'deviceId' in row and row['deviceId']:
@@ -433,12 +434,17 @@ def analyze_data():
                 initial_helpful_count += 1
             elif 'avail' in row and row['avail'] == '无帮助':
                 initial_unhelpful_count += 1
+            # 计算有图片无文字数量：userContent为空且imageUrls不为空
+            if ('userContent' in row and (row['userContent'] is None or str(row['userContent']).strip() == '')) and \
+               ('imageUrls' in row and row['imageUrls'] is not None and str(row['imageUrls']).strip() != ''):
+                initial_image_no_text_count += 1
         
         # 用户数据统计
         user_device_ids = set()
         user_directives_count = 0
         user_helpful_count = 0
         user_unhelpful_count = 0
+        user_no_directives_count = 0  # directives为空的数量
         
         for row in user_data:
             if 'deviceId' in row and row['deviceId']:
@@ -449,13 +455,17 @@ def analyze_data():
                 user_helpful_count += 1
             elif 'avail' in row and row['avail'] == '无帮助':
                 user_unhelpful_count += 1
+            # 计算directives为空的数量
+            if 'directives' in row and (row['directives'] is None or str(row['directives']).strip() == ''):
+                user_no_directives_count += 1
         
         initial_stats = {
             '总数据量': len(initial_data),
             '使用人数': len(initial_device_ids),
             '给出指令次数': initial_directives_count,
             '有帮助次数': initial_helpful_count,
-            '无帮助次数': initial_unhelpful_count
+            '无帮助次数': initial_unhelpful_count,
+            '有图片无文字数量/无指令总数': f"{initial_image_no_text_count}"
         }
         
         user_stats = {
@@ -463,16 +473,27 @@ def analyze_data():
             '使用人数': len(user_device_ids),
             '给出指令次数': user_directives_count,
             '有帮助次数': user_helpful_count,
-            '无帮助次数': user_unhelpful_count
+            '无帮助次数': user_unhelpful_count,
+            '有图片无文字数量/无指令总数': f"{user_no_directives_count}"
         }
         
         # 构造返回结果
         results = []
+        # 添加原有指标
         for key in initial_stats.keys():
+            if key != '有图片无文字数量/无指令总数':
+                results.append({
+                    'metric': f'{platform} - {key}',
+                    'initialData': initial_stats[key] if 'initial' in data_types else '',
+                    'userData': user_stats[key] if 'user' in data_types else ''
+                })
+        
+        # 最后添加新指标
+        if '有图片无文字数量/无指令总数' in initial_stats:
             results.append({
-                'metric': f'{platform} - {key}',
-                'initialData': initial_stats[key] if 'initial' in data_types else '',
-                'userData': user_stats[key] if 'user' in data_types else ''
+                'metric': f'{platform} - 有图片无文字数量/无指令总数',
+                'initialData': initial_stats['有图片无文字数量/无指令总数'] if 'initial' in data_types else '',
+                'userData': user_stats['有图片无文字数量/无指令总数'] if 'user' in data_types else ''
             })
         
         # 存储数据到内存数据库供 SQL 查询使用
