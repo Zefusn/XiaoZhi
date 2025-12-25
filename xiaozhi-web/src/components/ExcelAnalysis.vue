@@ -8,12 +8,14 @@
           :limit="1"
           :on-change="handleFileChange"
           :on-remove="handleFileRemove"
+          :on-exceed="handleFileExceed"
+          :file-list="fileList"
           accept=".xlsx,.xls,.xlsm,.xltx,.xltm"
         >
           <el-button type="primary" :icon="Upload">选择文件</el-button>
           <template #tip>
             <div class="el-upload__tip">
-              {{ sharedFileName.value || '仅支持 .xlsx, .xls, .xlsm, .xltx, .xltm 文件' }}
+              仅支持 .xlsx, .xls, .xlsm, .xltx, .xltm 文件
             </div>
           </template>
         </el-upload>
@@ -26,12 +28,14 @@
           :limit="1"
           :on-change="handleFilterFileChange"
           :on-remove="handleFilterFileRemove"
+          :on-exceed="handleFilterFileExceed"
+          :file-list="filterFileList"
           accept=".xlsx,.xls,.xlsm,.xltx,.xltm"
         >
           <el-button type="primary" :icon="Upload">选择过滤文件</el-button>
           <template #tip>
             <div class="el-upload__tip">
-              {{ sharedFilterFileName.value || '选择包含需要去除的 userContent 的 Excel 文件' }}
+              选择包含需要去除的 userContent 的 Excel 文件
             </div>
           </template>
         </el-upload>
@@ -102,7 +106,7 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Upload } from '@element-plus/icons-vue'
 import api from '@/utils/request'
@@ -123,43 +127,75 @@ const filterFile = sharedFilterFile
 const loading = ref(false)
 const results = ref([])
 const selectedRows = ref([])
+// 文件列表用于显示已选择的文件
+const fileList = ref([])
+const filterFileList = ref([])
+
+// 监听共享文件状态变化，同步文件列表显示
+watch(sharedFileName, (newName) => {
+  if (newName) {
+    fileList.value = [{ name: newName, uid: Date.now() }]
+  } else {
+    fileList.value = []
+  }
+})
+
+watch(sharedFilterFileName, (newName) => {
+  if (newName) {
+    filterFileList.value = [{ name: newName, uid: Date.now() }]
+  } else {
+    filterFileList.value = []
+  }
+})
 
 const handleFileChange = (file) => {
-  // 清除之前的文件列表
-  if (uploadRef.value) {
-    uploadRef.value.clearFiles()
-  }
   updateSelectedFile(file.raw)
   updateFileName(file.name)
+  // 更新文件列表
+  fileList.value = [{ name: file.name, uid: file.uid }]
+}
+
+const handleFileExceed = (files) => {
+  // 当超出文件数量限制时，自动替换为新文件
+  uploadRef.value.clearFiles()
+  const file = files[0]
+  uploadRef.value.handleStart(file)
+  updateSelectedFile(file)
+  updateFileName(file.name)
+  fileList.value = [{ name: file.name, uid: file.uid || Date.now() }]
 }
 
 const handleFileRemove = () => {
   updateSelectedFile(null)
   updateFileName('')
-  // 清除上传组件的文件列表
-  if (uploadRef.value) {
-    uploadRef.value.clearFiles()
-  }
+  // 清空文件列表
+  fileList.value = []
 }
 
 const handleFilterFileChange = (file) => {
   if (file) {
-    // 清除之前的文件列表
-    if (filterUploadRef.value) {
-      filterUploadRef.value.clearFiles()
-    }
     updateFilterFile(file.raw)
     updateFilterFileName(file.name)
+    // 更新过滤文件列表
+    filterFileList.value = [{ name: file.name, uid: file.uid }]
   }
+}
+
+const handleFilterFileExceed = (files) => {
+  // 当超出文件数量限制时，自动替换为新文件
+  filterUploadRef.value.clearFiles()
+  const file = files[0]
+  filterUploadRef.value.handleStart(file)
+  updateFilterFile(file)
+  updateFilterFileName(file.name)
+  filterFileList.value = [{ name: file.name, uid: file.uid || Date.now() }]
 }
 
 const handleFilterFileRemove = () => {
   updateFilterFile(null)
   updateFilterFileName('')
-  // 清除上传组件的文件列表
-  if (filterUploadRef.value) {
-    filterUploadRef.value.clearFiles()
-  }
+  // 清空过滤文件列表
+  filterFileList.value = []
 }
 
 const setDefaultDeviceIds = () => {
