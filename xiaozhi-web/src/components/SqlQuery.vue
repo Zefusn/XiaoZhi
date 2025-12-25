@@ -1,11 +1,23 @@
 <template>
   <div class="sql-query">
     <el-alert
-      title="提示"
-      type="info"
-      description="请先在 Excel 数据分析或小志标签处理页面加载数据，然后再执行 SQL 查询"
+      v-if="!hasData"
+      title="请先加载数据"
+      type="warning"
+      description="请先在「Excel 数据分析」或「小志标签处理」页面点击查询/生成按钮加载数据，然后再返回此页面执行 SQL 查询"
       :closable="false"
       class="mb-20"
+      show-icon
+    />
+    
+    <el-alert
+      v-else
+      title="数据已加载"
+      type="success"
+      :description="`当前已加载 ${dataCount} 条数据，表名为: data`"
+      :closable="false"
+      class="mb-20"
+      show-icon
     />
 
     <el-form label-width="100px">
@@ -64,7 +76,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, onActivated } from 'vue'
 import { ElMessage } from 'element-plus'
 import api from '@/utils/request'
 
@@ -74,10 +86,41 @@ const results = ref([])
 const columns = ref([])
 const tableRef = ref()
 const selectedRows = ref([])
+const hasData = ref(false)
+const dataCount = ref(0)
+
+// 检查数据状态
+const checkDataStatus = async () => {
+  try {
+    const res = await api.get('/data-status')
+    hasData.value = res.hasData
+    dataCount.value = res.dataCount
+  } catch (error) {
+    hasData.value = false
+    dataCount.value = 0
+  }
+}
+
+// 组件挂载时检查数据状态
+onMounted(() => {
+  checkDataStatus()
+})
+
+// 组件激活时重新检查数据状态
+onActivated(() => {
+  checkDataStatus()
+})
 
 const executeQuery = async () => {
   if (!sqlQuery.value.trim()) {
     ElMessage.warning('请输入 SQL 查询语句')
+    return
+  }
+  
+  // 先检查数据状态
+  await checkDataStatus()
+  if (!hasData.value) {
+    ElMessage.warning('没有可用的数据，请先在「Excel 数据分析」或「小志标签处理」页面加载数据')
     return
   }
 

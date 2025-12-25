@@ -723,7 +723,7 @@ def sql_query():
             return jsonify({'error': 'SQL 查询语句不能为空'}), 400
         
         if not data_store['conn']:
-            return jsonify({'error': '没有可用的数据，请先加载数据'}), 400
+            return jsonify({'error': '没有可用的数据，请先在「Excel 数据分析」或「小志标签处理」页面点击查询/生成按钮加载数据'}), 400
         
         # 执行 SQL 查询
         cursor = data_store['conn'].cursor()
@@ -740,6 +740,29 @@ def sql_query():
     
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/data-status', methods=['GET'])
+def data_status():
+    """检查数据加载状态"""
+    try:
+        has_data = data_store['conn'] is not None
+        data_count = 0
+        
+        if has_data:
+            try:
+                cursor = data_store['conn'].cursor()
+                cursor.execute('SELECT COUNT(*) FROM data')
+                data_count = cursor.fetchone()[0]
+            except:
+                has_data = False
+        
+        return jsonify({
+            'hasData': has_data,
+            'dataCount': data_count
+        })
+    except Exception as e:
+        return jsonify({'hasData': False, 'dataCount': 0})
 
 
 @app.route('/api/health', methods=['GET'])
