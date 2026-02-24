@@ -56,6 +56,7 @@
         <el-radio-group v-model="form.platform">
           <el-radio label="安卓">安卓</el-radio>
           <el-radio label="iOS">iOS</el-radio>
+          <el-radio label="鸿蒙">鸿蒙</el-radio>
         </el-radio-group>
       </el-form-item>
 
@@ -119,7 +120,7 @@ import api from '@/utils/request'
 import { selectedFile as sharedSelectedFile, filterFile as sharedFilterFile, fileName as sharedFileName, filterFileName as sharedFilterFileName, updateSelectedFile, updateFileName, updateFilterFile, updateFilterFileName } from '@/store/fileStore'
 
 const form = reactive({
-  deviceIds: 'ac44a75398c981f7,d05eae7f04ed5d52,a60a2ff1d9c3ccfb,0276ecb7a675de03,368b4f5495a5e564,f7f42dc48701c3b6,f7f42dc48701c3b6,6b148ea3088089ec,d1579a130a93aab9,e80d34b2ee6fc588,8ff0f2727c76ee81,cb00707bd8231384,22ccbb1f4183522b,22ccbb1f4183522b,f71400c874c7ae03,b053fed6f322070d,77ffb26dd8aec8d7,b19393e3fb39fed1,aa165cc58b7b69e1,066a1f89fe9e631a,766b3ef3f8f35119,c8cbd47c78e3adba,9fe81ff00522beff',
+  deviceIds: 'ac28a948f719463aa730514e04ca66e6,4d530e405ee02c82,1b1e906119545bc1,e364860f627f5e18,0276ecb7a675de03,774f3938009049de87b974b89b2df1dd,8ca5dde4ab6fcc46,00344d2ee15746babb5d6270a7d25551,60467f3ec8b04dd9847c9ef847edbe8d,cd0dc52d06117fb9,3da02abec00d495bbbb401ba4ed8253d,3d21ce8e7f584765,d136cd6ef5f0b53e,e80d34b2ee6fc588,67a7e394bdbb87c6,266afcda853c4f80,0d638755f40323e2,7550b688dde06d23,f7f42dc48701c3b6,9771bb5db3ec2ab3,3ad6ea34129240f5974e27f9ecd3a01f,030575dd2d444a3ebf5b110aece14f89,535d620d0f030465,6b148ea3088089ec,a60a2ff1d9c3ccfb,22ccbb1f4183522b,b053fed6f322070d,3a764e1d2e06400d8475f5703083dea1,4c96f7aa72fc4f54b9f89004679db9eb,0bc2724e948c466ab154f536b5729604,f75fbcb1a4644e9eb3f93b9d55fdb2fb,cf7c87b73c4d1903',
   platform: '安卓',
   analysisType: 'default'
 })
@@ -219,7 +220,7 @@ const handleFilterFileRemove = () => {
 }
 
 const setDefaultDeviceIds = () => {
-  form.deviceIds = 'ac44a75398c981f7,d05eae7f04ed5d52,a60a2ff1d9c3ccfb,0276ecb7a675de03,368b4f5495a5e564,f7f42dc48701c3b6,f7f42dc48701c3b6,6b148ea3088089ec,d1579a130a93aab9,e80d34b2ee6fc588,8ff0f2727c76ee81,cb00707bd8231384,22ccbb1f4183522b,22ccbb1f4183522b,f71400c874c7ae03,b053fed6f322070d,77ffb26dd8aec8d7,b19393e3fb39fed1,aa165cc58b7b69e1,066a1f89fe9e631a,766b3ef3f8f35119,c8cbd47c78e3adba,9fe81ff00522beff'
+  form.deviceIds = 'ac28a948f719463aa730514e04ca66e6,4d530e405ee02c82,1b1e906119545bc1,e364860f627f5e18,0276ecb7a675de03,774f3938009049de87b974b89b2df1dd,8ca5dde4ab6fcc46,00344d2ee15746babb5d6270a7d25551,60467f3ec8b04dd9847c9ef847edbe8d,cd0dc52d06117fb9,3da02abec00d495bbbb401ba4ed8253d,3d21ce8e7f584765,d136cd6ef5f0b53e,e80d34b2ee6fc588,67a7e394bdbb87c6,266afcda853c4f80,0d638755f40323e2,7550b688dde06d23,f7f42dc48701c3b6,9771bb5db3ec2ab3,3ad6ea34129240f5974e27f9ecd3a01f,030575dd2d444a3ebf5b110aece14f89,535d620d0f030465,6b148ea3088089ec,a60a2ff1d9c3ccfb,22ccbb1f4183522b,b053fed6f322070d,3a764e1d2e06400d8475f5703083dea1,4c96f7aa72fc4f54b9f89004679db9eb,0bc2724e948c466ab154f536b5729604,f75fbcb1a4644e9eb3f93b9d55fdb2fb,cf7c87b73c4d1903'
 }
 
 const generateResults = async () => {

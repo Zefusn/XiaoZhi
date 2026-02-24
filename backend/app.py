@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import sqlite3
@@ -395,35 +396,52 @@ def analyze_data():
         # 根据平台过滤
         if platform == '安卓':
             pkg_name = 'com.helloxj.xlook'
-        else:
+        elif platform == 'iOS':
             pkg_name = 'cs.zero.waterCamera'
-        
-        # 初始数据
-        initial_data = [row for row in data if 'pkgName' in row and row['pkgName'] == pkg_name]
-        
-        # 用户数据（过滤设备ID）
-        if device_id_list:
-            user_data = [row for row in data 
-                        if 'pkgName' in row and row['pkgName'] == pkg_name and 
-                        'deviceId' in row and row['deviceId'] not in device_id_list]
         else:
-            user_data = [row for row in data if 'pkgName' in row and row['pkgName'] == pkg_name]
+            pkg_name = 'com.helloxj.xlookohos'
         
-        # 如果有用于过滤的文件，过滤 userContent 相同的数据
+        # 1. 保存原始数据（用于有图片无文字数量/无指令总数统计）
+        original_initial_data = [row for row in data if 'pkgName' in row and row['pkgName'] == pkg_name]
+        if device_id_list:
+            original_user_data = [row for row in data 
+                                if 'pkgName' in row and row['pkgName'] == pkg_name and 
+                                'deviceId' in row and row['deviceId'] not in device_id_list]
+        else:
+            original_user_data = [row for row in data if 'pkgName' in row and row['pkgName'] == pkg_name]
+        
+        # 2. 剔除有图片无文字的内容
+        def filter_data(data_list):
+            return [row for row in data_list if not (
+                ('imageUrls' in row and row['imageUrls'] is not None and str(row['imageUrls']).strip() != '') and
+                ('userContent' in row and (row['userContent'] is None or str(row['userContent']).strip() == ''))
+            )]
+        
+        # 初始数据（剔除后）
+        initial_data = filter_data(original_initial_data)
+        
+        # 用户数据（剔除后）
+        user_data = filter_data(original_user_data)
+        
+        # 3. 如果有用于过滤的文件，过滤 userContent 相同的数据
         if filter_filepath:
             filter_user_contents = read_excel_with_python_libs_for_filter(filter_filepath)
             initial_data = [row for row in initial_data 
                            if 'userContent' not in row or str(row['userContent']) not in filter_user_contents]
             user_data = [row for row in user_data 
                         if 'userContent' not in row or str(row['userContent']) not in filter_user_contents]
+            # 同时过滤原始数据
+            original_initial_data = [row for row in original_initial_data 
+                                   if 'userContent' not in row or str(row['userContent']) not in filter_user_contents]
+            original_user_data = [row for row in original_user_data 
+                                if 'userContent' not in row or str(row['userContent']) not in filter_user_contents]
         
-        # 统计数据
-        # 初始数据统计
+        # 4. 统计数据
+        # 初始数据统计（使用剔除后的数据）
         initial_device_ids = set()
         initial_directives_count = 0
         initial_helpful_count = 0
         initial_unhelpful_count = 0
-        initial_image_no_text_count = 0  # 有图片无文字数量
         
         for row in initial_data:
             if 'deviceId' in row and row['deviceId']:
@@ -434,17 +452,12 @@ def analyze_data():
                 initial_helpful_count += 1
             elif 'avail' in row and row['avail'] == '无帮助':
                 initial_unhelpful_count += 1
-            # 计算有图片无文字数量：userContent为空且imageUrls不为空
-            if ('userContent' in row and (row['userContent'] is None or str(row['userContent']).strip() == '')) and \
-               ('imageUrls' in row and row['imageUrls'] is not None and str(row['imageUrls']).strip() != ''):
-                initial_image_no_text_count += 1
         
-        # 用户数据统计
+        # 用户数据统计（使用剔除后的数据）
         user_device_ids = set()
         user_directives_count = 0
         user_helpful_count = 0
         user_unhelpful_count = 0
-        user_no_directives_count = 0  # directives为空的数量
         
         for row in user_data:
             if 'deviceId' in row and row['deviceId']:
@@ -455,6 +468,17 @@ def analyze_data():
                 user_helpful_count += 1
             elif 'avail' in row and row['avail'] == '无帮助':
                 user_unhelpful_count += 1
+        
+        # 5. 使用原始数据统计有图片无文字数量/无指令总数
+        initial_image_no_text_count = 0  # 有图片无文字数量
+        for row in original_initial_data:
+            # 计算有图片无文字数量：userContent为空且imageUrls不为空
+            if ('userContent' in row and (row['userContent'] is None or str(row['userContent']).strip() == '')) and \
+               ('imageUrls' in row and row['imageUrls'] is not None and str(row['imageUrls']).strip() != ''):
+                initial_image_no_text_count += 1
+        
+        user_no_directives_count = 0  # directives为空的数量
+        for row in original_user_data:
             # 计算directives为空的数量
             if 'directives' in row and (row['directives'] is None or str(row['directives']).strip() == ''):
                 user_no_directives_count += 1
@@ -609,22 +633,37 @@ def label_process():
         # 根据平台过滤
         if platform == '安卓':
             pkg_name = 'com.helloxj.xlook'
-        else:
+        elif platform == 'iOS':
             pkg_name = 'cs.zero.waterCamera'
+        else:
+            pkg_name = 'com.helloxj.xlookohos'
         
-        # 过滤数据
+        # 1. 保存原始数据（用于有图片无文字数量/无指令总数统计）
         if device_id_list:
-            filtered_data = [row for row in data 
+            original_data = [row for row in data 
                             if 'pkgName' in row and row['pkgName'] == pkg_name and 
                             'deviceId' in row and row['deviceId'] not in device_id_list]
         else:
-            filtered_data = [row for row in data if 'pkgName' in row and row['pkgName'] == pkg_name]
+            original_data = [row for row in data if 'pkgName' in row and row['pkgName'] == pkg_name]
         
-        # 如果有用于过滤的文件，过滤 userContent 相同的数据
+        # 2. 剔除有图片无文字的内容
+        def filter_data(data_list):
+            return [row for row in data_list if not (
+                ('imageUrls' in row and row['imageUrls'] is not None and str(row['imageUrls']).strip() != '') and
+                ('userContent' in row and (row['userContent'] is None or str(row['userContent']).strip() == ''))
+            )]
+        
+        # 过滤后的数据
+        filtered_data = filter_data(original_data)
+        
+        # 3. 如果有用于过滤的文件，过滤 userContent 相同的数据
         if filter_filepath:
             filter_user_contents = read_excel_with_python_libs_for_filter(filter_filepath)
             filtered_data = [row for row in filtered_data 
                             if 'userContent' not in row or str(row['userContent']) not in filter_user_contents]
+            # 同时过滤原始数据
+            original_data = [row for row in original_data 
+                           if 'userContent' not in row or str(row['userContent']) not in filter_user_contents]
         
         # 统计问题/标签出现次数
         question_counts = {}
