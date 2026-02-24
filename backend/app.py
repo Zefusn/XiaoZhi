@@ -512,8 +512,8 @@ def analyze_data():
                     'userData': user_stats[key] if 'user' in data_types else ''
                 })
         
-        # 最后添加新指标
-        if '有图片无文字数量/无指令总数' in initial_stats:
+        # 最后添加新指标（仅在没有过滤文件时）
+        if '有图片无文字数量/无指令总数' in initial_stats and not filter_filepath:
             results.append({
                 'metric': f'{platform} - 有图片无文字数量/无指令总数',
                 'initialData': initial_stats['有图片无文字数量/无指令总数'] if 'initial' in data_types else '',
